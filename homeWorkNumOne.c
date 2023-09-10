@@ -2,91 +2,85 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_STUDENTS 100
+typedef struct node{
+    int number;
+    char name[20];
+    char department[20];
+}student;
 
-struct Student {
-    int studentNo;
-    char name[50];
-    char department[50];
-};
+void addStdRecord(FILE *mp){
+    student std;
+    
+    printf("Number: ");
+    scanf("%d", &std.number);
+    printf("Name: ");
+    scanf("%s", std.name);
+    printf("Department: ");
+    scanf("%s", std.department);
+    
+    fwrite(&std, sizeof(student), 1, mp);
+    printf("\n\n The record is added successfully.\n\n");
+}
 
-int main() {
-    struct Student students[MAX_STUDENTS];
-    int numStudents = 0;
-
-    int choice;
-    do {
-        printf("Menu:\n");
-        printf("1. Add Student\n");
-        printf("2. Search by Name\n");
-        printf("3. Exit\n");
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
-
-        switch (choice) {
-            case 1:
-                if (numStudents < MAX_STUDENTS) {
-                    printf("Enter student number: ");
-                    scanf("%d", &students[numStudents].studentNo);
-                    printf("Enter student name: ");
-                    scanf(" %[^\n]", students[numStudents].name);
-                    printf("Enter student department: ");
-                    scanf(" %[^\n]", students[numStudents].department);
-
-                    FILE *file = fopen("students.dat", "w");
-                    if (file != NULL) {
-                        fprintf(file, "%d|%s|%s\n",
-                                students[numStudents].studentNo,
-                                students[numStudents].name,
-                                students[numStudents].department);
-                        fclose(file);
-                        numStudents++;
-                    } else {
-                        printf("Error opening file.\n");
-                    }
-                } else {
-                    printf("Maximum number of students reached.\n");
-                }
-                break;
-            case 2:
-                if (numStudents == 0) {
-                    printf("No students in the database.\n");
-                } else {
-                    char searchName[50];
-                    printf("Enter name to search for: ");
-                    scanf(" %[^\n]", searchName);
-
-                    FILE *file = fopen("students.dat", "r");
-                    if (file != NULL) {
-                        int found = 0;
-                        char line[200];
-                        while (fgets(line, sizeof(line), file)) {
-                            char *token = strtok(line, "|");
-                            if (strcmp(token, searchName) == 0) {
-                                found = 1;
-                                printf("Student found:\n");
-                                printf("Student Number: %s\n", token);
-                                printf("Name: %s\n", strtok(NULL, "|"));
-                                printf("Department: %s\n", strtok(NULL, "\n"));
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            printf("Student not found.\n");
-                        }
-                        fclose(file);
-                    } else {
-                        printf("Error opening file.\n");
-                    }
-                }
-                break;
-            case 3:
-                printf("Exiting the program.\n");
-                break;
-            default:
-                printf("Invalid choice. Please try again.\n");
+void searchRecordByNmae(FILE *mp){
+    char searchName[20];
+    printf("Insert a name to search: ");
+    scanf("%s", searchName);
+    printf("\n\n");
+    
+    student std;
+    int found=0;
+    
+    fseek(mp, 0, SEEK_SET);
+    while(fread(&std, sizeof(student), 1, mp)==1){
+        if(strcmp(searchName, std.name)==0){
+            printf("Number: %d\n", std.number);
+            printf("Name: %s\n", std.name);
+            printf("Department: %s\n\n", std.department);
+            found=1;
         }
-    } while (choice != 3);
+    }
+    
+    if(!found){
+        printf("\n\n The record is not found in the system.\n\n");
+    }
+}
 
+int main(){
+    int c;
+    FILE *mp = fopen("student.dat", "ab+");
+    
+    if(mp==NULL){
+        return 0;
+    }
+    else{
+        while(1){
+            printf("Menu:\n");
+            printf("1.Adding a record to the system.\n2.Searching a record by his or her name.\n3.Exit\n\n");
+            printf("Select your choice: ");
+            scanf("%d", &c);
+            printf("\n\n");
+            
+            switch(c){
+                case 1:
+                    addStdRecord(mp);
+                break;
+                
+                case 2:
+                    searchRecordByNmae(mp);
+                break;
+                
+                case 3:
+                    fclose(mp);
+                    exit(0);
+                break;
+                
+                default:
+                    printf(" Wrong. Try again...\n\n");
+                break;    
+            }
+        }
+    }
+    
     return 0;
 }
